@@ -16,10 +16,10 @@ app = FastAPI()
 
 def get_connection():
     conn = psycopg2.connect(
-        host=os.environ.get("POSTGRES_URL"),
-        database=os.environ.get("POSTGRES_DB"),
-        user=os.environ.get("POSTGRES_USER"),
-        password=os.environ.get("POSTGRES_PASSWORD"),
+        host="localhost",
+        database="database",
+        user="ong",
+        password="1234",
     )
     return conn
 
@@ -27,6 +27,23 @@ def get_connection():
 @app.get("/")
 def read_root():
     return {"Hello": "World2"}
+
+
+@app.get("/books/")
+def create_book(book: Book):
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = """
+    select * from books
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    conn.commit()
+    conn.close()
+    if not results:
+        raise HTTPException(status_code=404, detail="Book not found")
+    book = [dict(zip(["id", "title", "author", "publication_year"], result)) for result in results]
+    return book
 
 
 @app.post("/books/")
@@ -93,4 +110,4 @@ def delete_book(book_id: int):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("__main__:app", host="0.0.0.0", port=8000, reload=True)
