@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+    environment:
+      - POSTGRES_URL=database
+      - POSTGRES_USER=ong
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=database
+
+  database:
+    image: postgres
+    environment:
+      - POSTGRES_USER=ong
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=database
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  portainer:
+    image: portainer/portainer-ce:latest
+    ports:
+      - 9443:9443
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${pwd}/data:/data
+    restart: unless-stopped
